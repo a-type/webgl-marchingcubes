@@ -92,3 +92,11 @@ MARCH.MarchingCubesGenerator = function () {
         return triangles;
     };
 };
+
+$(document).load(function () {
+    //generate terrain noise
+
+    //iterate through chunks and create polys
+
+    //begin render cycle
+});
