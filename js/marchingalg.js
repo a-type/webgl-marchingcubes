@@ -1,5 +1,5 @@
 /*jslint plusplus: true, sloppy: true */
-/*global MARCH: false, THREE: false*/
+/*global MARCH: false, THREE: false, PerlinNoise: false*/
 
 
 MARCH.MarchingCubesGenerator = function () {
@@ -92,11 +92,3 @@ MARCH.MarchingCubesGenerator = function () {
         return triangles;
     };
 };
-
-$(document).load(function () {
-    //generate terrain noise
-
-    //iterate through chunks and create polys
-
-    //begin render cycle
-});
