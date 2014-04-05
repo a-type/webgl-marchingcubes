@@ -3,7 +3,7 @@
 
 
 MARCH.MarchingCubesGenerator = function () {
-    this.isoLevel = 8;
+    this.isoLevel = 0.01;
 
     /* Interpolates between two vertices (v1 and v2) according to values val1 and val2 */
     this.interpolateVertices = function(v1, v2, val1, val2) {
@@ -83,9 +83,13 @@ MARCH.MarchingCubesGenerator = function () {
         }
         
         for (i = 0; MARCH.tris[cubeIndex][i] !== -1; i += 3) {
-            triangles[ntriangle].points[0] = vertList[MARCH.tris[cubeIndex][i]];
-            triangles[ntriangle].points[1] = vertList[MARCH.tris[cubeIndex][i + 1]];
-            triangles[ntriangle].points[2] = vertList[MARCH.tris[cubeIndex][i + 2]];
+            triangles[ntriangle] = {
+                points: [
+                    vertList[MARCH.tris[cubeIndex][i]],
+                    vertList[MARCH.tris[cubeIndex][i + 1]],
+                    vertList[MARCH.tris[cubeIndex][i + 2]]
+                ]
+            };
             ntriangle++;
         }
         
