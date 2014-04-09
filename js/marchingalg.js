@@ -37,7 +37,7 @@ MARCH.MarchingCubesGenerator = function () {
             triangles = [];
         
         for (i = 0; i < 8; i++) {
-            if (cube.val[i] < this.isoLevel) { cubeIndex |= Math.pow(2, i); }
+            if (cube.val[i] < this.isoLevel) { cubeIndex |= 1 << i; }
         }
         
         //cube is enclosed in or excluded from the surface
@@ -79,7 +79,7 @@ MARCH.MarchingCubesGenerator = function () {
             vertList[10] = this.interpolateVertices(cube.points[2], cube.points[6], cube.val[2], cube.val[6]);
         }
         if (MARCH.edges[cubeIndex] & 2048) {
-            vertList[11] = this.interpolateVertices(cube.points[3], cube.points[7], cube.val[3], cube.val[6]);
+            vertList[11] = this.interpolateVertices(cube.points[3], cube.points[7], cube.val[3], cube.val[7]);
         }
         
         for (i = 0; MARCH.tris[cubeIndex][i] !== -1; i += 3) {
