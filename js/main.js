@@ -35,9 +35,25 @@ $(document).ready(function () {
                     //add to chunk array
                         data = oEvent.data;
                     chunks[data.chunkX / chunkSize][data.chunkY / chunkSize][data.chunkZ / chunkSize] = data.cubes;
+                    var geometry = new THREE.Geometry();
+                    
+                    var i = 0;
+                    for (i = 0; i < data.verts.length; i++) {
+                        geometry.vertices.push(new THREE.Vector3(data.verts[i].x, data.verts[i].y, data.verts[i].z));
+                    }
+                    for (i = 0; i < data.faces.length; i++) {
+                        geometry.faces.push(new THREE.Face3(data.faces[i].a, data.faces[i].b, data.faces[i].c));
+                        
+                    }
+                        
+                    //finalize mesh
+                    geometry.computeCentroids();
+                    geometry.computeFaceNormals();
+                    geometry.computeVertexNormals();
+                    var mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
                     
                     //add mesh to scene
-                    scene.add(data.mesh);
+                    scene.add(mesh);
                     console.log("Mesh added for chunk " + data.chunkX + "," + data.chunkY + "," + data.chunkZ);
                 }
                 chunkWorker.postMessage(chunkData);

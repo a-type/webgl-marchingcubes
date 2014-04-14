@@ -5,7 +5,8 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ) {
         cubeprocessor = new MARCH.MarchingCubesGenerator(),
 
     //create geom for this chunk
-        geometry = new THREE.Geometry(),
+        verts = [],
+        faces = [],
 
     //define cubes for chunk
         cubes = getCubes(size, stepSize, density, chunkX, chunkX + chunkSize,
@@ -24,9 +25,9 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ) {
                 var triangles = cubeprocessor.processCube(cube);
                 for (var t = 0; t < triangles.length; t++) {
                     for (var tv = 0; tv < 3; tv++) {
-                        geometry.vertices.push(triangles[t].points[tv].clone());
+                        verts.push(triangles[t].points[tv].clone());
                     }
-                    geometry.faces.push(new THREE.Face3(triIdx, triIdx + 1, triIdx + 2));
+                    faces.push(new THREE.Face3(triIdx, triIdx + 1, triIdx + 2));
                     //geometry.faceVertexUVs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(1, 1)]);
                     triIdx += 3;
                 }
@@ -34,14 +35,9 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ) {
         }
     }
     
-    //finalize mesh
-    geometry.computeCentroids();
-    geometry.computeFaceNormals();
-    geometry.computeVertexNormals();
-    var mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
-    
     //return all to caller
-    returnData.mesh = mesh;
+    returnData.verts = verts;
+    returnData.faces = faces;
     returnData.chunkX = chunkX;
     returnData.chunkY = chunkY;
     returnData.chunkZ = chunkZ;
