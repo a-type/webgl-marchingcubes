@@ -1,7 +1,7 @@
 /*jslint plusplus: true, sloppy: true */
 /*global MARCH: false, THREE: false, PerlinNoise: false, MarchingCubesGenerator: false*/
 
-var mesh, renderer, camera, scene, controls, chunks;
+var mesh, renderer, camera, cubemesh, scene, controls, chunks, lastMousePos, projector, width, height;
 
 
 
@@ -11,8 +11,6 @@ $(document).ready(function () {
         alert("You browser must support Web Workers to run this application.");
         return;
     }
-
-
 
     // http://stackoverflow.com/questions/11476765/using-noise-to-generate-marching-cube-terrain
     
@@ -38,8 +36,7 @@ $(document).ready(function () {
                 var chunkWorker = new Worker("js/cubeworker.js");
                 chunkWorker.onmessage = function (oEvent) {
                     //add to chunk array
-                        data = oEvent.data;
-                    chunks[data.chunkX / chunkSize][data.chunkY / chunkSize][data.chunkZ / chunkSize] = data.cubes;
+                    data = oEvent.data;
                     var geometry = new THREE.Geometry();
                     
                     var i = 0;
@@ -59,7 +56,8 @@ $(document).ready(function () {
                     
                     //add mesh to scene
                     scene.add(mesh);
-                    console.log("Mesh added for chunk " + data.chunkX + "," + data.chunkY + "," + data.chunkZ);
+                    chunks[data.chunkX / chunkSize][data.chunkY / chunkSize][data.chunkZ / chunkSize] = mesh;
+                    //console.log("Mesh added for chunk " + data.chunkX + "," + data.chunkY + "," + data.chunkZ);
                 }
                 chunkWorker.postMessage(chunkData);
             }
@@ -69,8 +67,8 @@ $(document).ready(function () {
     //create reference cube
     var cubegeometry = new THREE.CubeGeometry( 1, 1, 1 );
     var cubematerial = new THREE.MeshLambertMaterial( {color: 0x00ff00} );
-    var cubemesh = new THREE.Mesh(cubegeometry, cubematerial);
-    cubemesh.position.set(0, 0, 0);
+    cubemesh = new THREE.Mesh(cubegeometry, cubematerial);
+    cubemesh.position.set(-1000, -1000, -1000);
     scene.add(cubemesh);
     //create 'water'
     var planegeometry = new THREE.PlaneGeometry(size, size);
@@ -89,10 +87,21 @@ $(document).ready(function () {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     $("#container").append(renderer.domElement);
+    
+    width = $("#container").width();
+    height = $("#container").height();
+    
     renderer.clearColor = new THREE.Color(0xFFFFFF);
     controls = new THREE.DragControls(camera, renderer.domElement);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     camera.position.set(0, 0, 2);
+    //ensure frustum culling is on
+    camera.frustumCulled = true;
+    //make projector
+    projector = new THREE.Projector();
+    //bind inputs
+    document.addEventListener('mousemove', onMouseMove, false);
+    document.addEventListener('keydown', interact, false);
     //begin render cycle
     render();
 });
@@ -102,4 +111,30 @@ function render() {
     requestAnimationFrame(render);
     renderer.render(scene, camera);
     controls.update(33);
+}
+
+function interact(event) {
+    switch (event.keyCode) {
+        case 69:
+            dig();
+            break;
+    }
+}
+
+function onMouseMove(mouseEvent) {
+    lastMousePos = new THREE.Vector3(mouseEvent.pageX, mouseEvent.pageY);
+}
+
+function dig() {
+    //cast ray from mouse to terrain
+    var mousePos = lastMousePos.clone();
+    mousePos.x = (mousePos.x - (width / 2)) / (width / 2);
+    mousePos.y = ((height / 2) - mousePos.y) / (height / 2);
+    var ray = projector.pickingRay(mousePos, camera);
+    var allIntersects = ray.intersectObjects(scene.children);
+    if (allIntersects.length > 0) {
+        console.log("hit");   
+        
+        cubemesh.position.set(allIntersects[0].point);
+    }
 }

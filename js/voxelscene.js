@@ -18,7 +18,7 @@ VOXEL.density = function(px, py, pz, size, stepSize) {
 VOXEL.generate = function(size, stepSize) {
     //noise function for our density
     var density = VOXEL.density, 
-        px = 0,
+        px = 0, //some index values
         py = 0,
         pz = 0;
     
@@ -32,3 +32,7 @@ VOXEL.generate = function(size, stepSize) {
         }
     }
 };
+
+VOXEL.influenceFromPhysicalPosition = function(x, y, z, stepSize, influence) {
+    VOXEL.voxels[x / stepSize][y / stepSize][z / stepSize] += influence;
+}

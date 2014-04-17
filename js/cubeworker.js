@@ -41,7 +41,7 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ, voxelDat
     returnData.chunkX = chunkX;
     returnData.chunkY = chunkY;
     returnData.chunkZ = chunkZ;
-    console.log("Chunk " + chunkX + "," + chunkY + "," + chunkZ + " has finished.");
+    //console.log("Chunk " + chunkX + "," + chunkY + "," + chunkZ + " has finished.");
     postMessage(returnData);
 }
 
@@ -49,9 +49,9 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ, voxelDat
 function getCubes(size, stepSize, minX, maxX, minY, maxY, minZ, maxZ, voxelData) {
     var temp = [],
         halfSize = size / 2,
-        x = minX - halfSize,
-        y = minY - halfSize,
-        z = minZ - halfSize,
+        x = 0,  //physical position vars
+        y = 0,
+        z = 0,
         ix = 0, //temp index vars
         iy = 0,
         iz = 0,
