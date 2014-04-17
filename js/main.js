@@ -3,6 +3,8 @@
 
 var mesh, renderer, camera, scene, controls, chunks;
 
+
+
 $(document).ready(function () {
     //check browser compatibility status
     if (typeof (Worker) === "undefined") {
@@ -16,6 +18,9 @@ $(document).ready(function () {
     
     //define constants
     var size = 50, stepSize = 1, chunkSize = 10;
+    
+    //gen terrain
+    VOXEL.generate(size + 1, stepSize);
 
     //create the scene
     scene = new THREE.Scene();
@@ -29,7 +34,7 @@ $(document).ready(function () {
             chunks[chunkX / chunkSize][chunkY / chunkSize] = [];
             for (chunkZ = 0; chunkZ < size; chunkZ += chunkSize) {
                 //create worker and pass chunk data
-                var chunkData = { size: size, stepSize: stepSize, chunkSize: chunkSize, chunkX: chunkX, chunkY: chunkY, chunkZ: chunkZ };
+                var chunkData = { size: size, stepSize: stepSize, chunkSize: chunkSize, chunkX: chunkX, chunkY: chunkY, chunkZ: chunkZ, voxelData: VOXEL.voxels };
                 var chunkWorker = new Worker("js/cubeworker.js");
                 chunkWorker.onmessage = function (oEvent) {
                     //add to chunk array
@@ -65,14 +70,14 @@ $(document).ready(function () {
     var cubegeometry = new THREE.CubeGeometry( 1, 1, 1 );
     var cubematerial = new THREE.MeshLambertMaterial( {color: 0x00ff00} );
     var cubemesh = new THREE.Mesh(cubegeometry, cubematerial);
-    cubemesh.position.set(0, 0.5, 0);
+    cubemesh.position.set(0, 0, 0);
     scene.add(cubemesh);
     //create 'water'
     var planegeometry = new THREE.PlaneGeometry(size, size);
     var planematerial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
     var plane = new THREE.Mesh(planegeometry, planematerial);
     plane.lookAt(new THREE.Vector3(0, 1, 0));
-    plane.position.set(0, -0.5, 0);
+    plane.position.set(0, -1.5, 0);
     scene.add(plane);
     //add lights
     var pointLight;

@@ -1,4 +1,4 @@
-function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ) {
+function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ, voxelData) {
     //create return data object
     var returnData = {},
 
@@ -9,8 +9,8 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ) {
         faces = [],
 
     //define cubes for chunk
-        cubes = getCubes(size, stepSize, density, chunkX, chunkX + chunkSize,
-        chunkY, chunkY + chunkSize, chunkZ, chunkZ + chunkSize),
+        cubes = getCubes(size, stepSize, chunkX, chunkX + chunkSize,
+        chunkY, chunkY + chunkSize, chunkZ, chunkZ + chunkSize, voxelData),
 
         x = 0,
         y = 0,
@@ -46,19 +46,32 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ) {
 }
 
 
-function getCubes(size, stepSize, densityFunction, minX, maxX, minY, maxY, minZ, maxZ) {
+function getCubes(size, stepSize, minX, maxX, minY, maxY, minZ, maxZ, voxelData) {
     var temp = [],
         halfSize = size / 2,
         x = minX - halfSize,
         y = minY - halfSize,
-        z = minZ - halfSize;
-    for (x = minX - halfSize; x < maxX - halfSize; x += stepSize) {
-        temp[(x + halfSize) / stepSize - minX] = [];
-        for (y = minY - halfSize; y < maxY - halfSize; y += stepSize) {
-            temp[(x + halfSize) / stepSize - minX][(y + halfSize) / stepSize - minY] = [];
-            for (z = minZ - halfSize; z < maxZ - halfSize; z += stepSize) {
+        z = minZ - halfSize,
+        ix = 0, //temp index vars
+        iy = 0,
+        iz = 0,
+        ax = 0, //absolute index vars (into voxel array)
+        ay = 0,
+        az = 0;
+    for (ix = 0; ix < maxX - minX; ix++) {
+        ax = ix + minX;
+        x = ax * stepSize - halfSize;
+        temp[ix] = [];
+        for (iy = 0; iy < maxY - minY; iy++) {
+            ay = iy + minY;
+            y = ay * stepSize - halfSize;
+            temp[ix][iy] = [];
+            for (iz = 0; iz < maxZ - minZ; iz++) {
+                az = iz + minZ;
+                z = az * stepSize - halfSize;
                 var Vector3 = THREE.Vector3;
-                var corners = [new Vector3(x, y, z),
+                var corners = [
+                    new Vector3(x, y, z),
                     new Vector3(x, y + stepSize, z),
                     new Vector3(x + stepSize, y + stepSize, z),
                     new Vector3(x + stepSize, y, z),
@@ -66,36 +79,26 @@ function getCubes(size, stepSize, densityFunction, minX, maxX, minY, maxY, minZ,
                     new Vector3(x, y + stepSize, z + stepSize),
                     new Vector3(x + stepSize, y + stepSize, z + stepSize),
                     new Vector3(x + stepSize, y, z + stepSize)];
-                var densities = [densityFunction(corners[0], size),
-                    densityFunction(corners[1], size),
-                    densityFunction(corners[2], size),
-                    densityFunction(corners[3], size),
-                    densityFunction(corners[4], size),
-                    densityFunction(corners[5], size),
-                    densityFunction(corners[6], size),
-                    densityFunction(corners[7], size)];
-                temp[(x + halfSize) / stepSize - minX][(y + halfSize) / stepSize - minY][(z + halfSize) / stepSize - minZ] = { val: densities, points: corners };
+                var densities = [
+                    voxelData[ax][ay][az],
+                    voxelData[ax][ay + 1][az],
+                    voxelData[ax + 1][ay + 1][az],
+                    voxelData[ax + 1][ay][az],
+                    voxelData[ax][ay][az + 1],
+                    voxelData[ax][ay + 1][az + 1],
+                    voxelData[ax + 1][ay + 1][az + 1],
+                    voxelData[ax + 1][ay][az + 1]];
+                temp[ix][iy][iz] = { val: densities, points: corners };
             }
         }
     }
     return temp;
 }
 
-//noise function for our density
-function density(point, size) {
-    var x = point.x / (size / 2),
-        y = point.y / (size / 2),
-        z = point.z / (size / 2);
-    return y + noise.perlin3(x * 2 + 5, y * 2 + 3, z * 2 + 0.6);
-}
-
-
-
-
 onmessage = function (oEvent) {
 
     //load worker dependencies
-    importScripts("/lib/noise/noise.js", "/lib/threejs/three.js", "/js/marchingcubes.js", "/js/marchingalg.js");
+    importScripts("/lib/threejs/three.js", "/js/marchingcubes.js", "/js/marchingalg.js");
     //pass our chunk data
-    createChunk(oEvent.data.size, oEvent.data.stepSize, oEvent.data.chunkSize, oEvent.data.chunkX, oEvent.data.chunkY, oEvent.data.chunkZ);
+    createChunk(oEvent.data.size, oEvent.data.stepSize, oEvent.data.chunkSize, oEvent.data.chunkX, oEvent.data.chunkY, oEvent.data.chunkZ, oEvent.data.voxelData);
 }
