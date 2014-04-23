@@ -81,11 +81,6 @@ $(document).ready(function () {
 });
 
 function buildChunk(chunkX, chunkY, chunkZ) {
-    if (chunks[chunkX] && chunks[chunkX][chunkY] && chunks[chunkX][chunkY][chunkZ]) {
-        //remove previous mesh
-        scene.remove(chunks[chunkX][chunkY][chunkZ]);
-    }
-    
     //create worker and pass chunk data
     var chunkData = { size: size, stepSize: stepSize, chunkSize: chunkSize, chunkX: chunkX, chunkY: chunkY, chunkZ: chunkZ, voxelData: VOXEL.voxels };
     var chunkWorker = new Worker("js/cubeworker.js");
@@ -109,6 +104,12 @@ function buildChunk(chunkX, chunkY, chunkZ) {
         geometry.computeVertexNormals();
         var mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
 
+        //remove old
+        if (chunks[chunkX] && chunks[chunkX][chunkY] && chunks[chunkX][chunkY][chunkZ]) {
+            //remove previous mesh
+            scene.remove(chunks[chunkX][chunkY][chunkZ]);
+        }
+        
         //add mesh to scene
         scene.add(mesh);
         chunks[data.chunkX / chunkSize][data.chunkY / chunkSize][data.chunkZ / chunkSize] = mesh;
