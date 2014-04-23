@@ -33,6 +33,20 @@ VOXEL.generate = function(size, stepSize) {
     }
 };
 
-VOXEL.influenceFromPhysicalPosition = function(x, y, z, stepSize, influence) {
-    VOXEL.voxels[x / stepSize][y / stepSize][z / stepSize] += influence;
+//influences the voxel value at a location (translated from unconverted world coord), returns overflow
+VOXEL.influenceFromPhysicalPosition = function(x, y, z, size, stepSize, influence) {
+    var ix = (x + (size / 2)) / stepSize,
+        iy = (y + (size / 2)) / stepSize,
+        iz = (z + (size / 2)) / stepSize,
+        overflow = 0;
+    VOXEL.voxels[ix][iy][iz] += influence;
+    if (VOXEL.voxels[ix][iy][iz] > 1) {
+        overflow = VOXEL.voxels[ix][iy][iz] - 1;
+        VOXEL.voxels[ix][iy][iz] = 1;
+    }
+    else if (VOXEL.voxels[ix][iy][iz] < 0) {
+        overflow = 0 - VOXEL.voxels[ix][iy][iz];
+        VOXEL.voxels[ix][iy][iz] = 0;
+    }
+    return overflow;
 }
