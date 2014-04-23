@@ -15,7 +15,7 @@ $(document).ready(function () {
     // http://stackoverflow.com/questions/11476765/using-noise-to-generate-marching-cube-terrain
     
     //define constants
-    var size = 50, stepSize = 1, chunkSize = 10;
+    var size = 64, stepSize = 1, chunkSize = 32;
     
     //gen terrain
     VOXEL.generate(size + 1, stepSize);
