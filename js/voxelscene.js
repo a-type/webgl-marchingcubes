@@ -33,6 +33,39 @@ VOXEL.generate = function(size, stepSize) {
     }
 };
 
+VOXEL.generateCubic = function(size, stepSize) {
+    //noise function for our density
+    var density = VOXEL.density, 
+        px = 0, //some index values
+        py = 0,
+        pz = 0;
+
+    for (px = 0; px < size; px++) {
+        VOXEL.voxels[px] = [];
+        for (py = 0; py < size; py++) {
+            VOXEL.voxels[px][py] = [];
+            for (pz = 0; pz < size; pz++) {
+                VOXEL.voxels[px][py][pz] = density(px, py, pz, size, stepSize) > 0 ? 1 : 0;
+            }
+        }
+    }
+};
+
+VOXEL.generateFlat = function(size, stepSize) {
+    for (px = 0; px < size; px++) {
+        VOXEL.voxels[px] = [];
+        for (py = 0; py < size; py++) {
+            VOXEL.voxels[px][py] = [];
+            for (pz = 0; pz < size; pz++) {
+                if (py > size / 2)
+                    VOXEL.voxels[px][py][pz] = 0;
+                else
+                    VOXEL.voxels[px][py][pz] = 1;
+            }
+        }
+    }
+};
+
 //influences the voxel value at a location (translated from unconverted world coord), returns overflow
 VOXEL.influenceFromPhysicalPosition = function(x, y, z, size, stepSize, influence) {
     var ix = (x + (size / 2)) / stepSize,

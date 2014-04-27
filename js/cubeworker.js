@@ -1,4 +1,5 @@
-function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ, voxelData) {
+function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ, voxelData, batchSizeX, batchSizeY, batchSizeZ) {
+    console.log(chunkX);
     //create return data object
     var returnData = {},
 
@@ -9,32 +10,46 @@ function createChunk(size, stepSize, chunkSize, chunkX, chunkY, chunkZ, voxelDat
         faces = [],
 
     //define cubes for chunk
-        cubes = getCubes(size, stepSize, chunkX, chunkX + chunkSize,
-        chunkY, chunkY + chunkSize, chunkZ, chunkZ + chunkSize, voxelData),
+        cubes = getCubes(size, stepSize, chunkX, chunkX + (chunkSize * batchSizeX),
+        chunkY, chunkY + (chunkSize * batchSizeY), chunkZ, chunkZ + (chunkSize * batchSizeZ), voxelData),
 
         x = 0,
         y = 0,
         z = 0,
+        bx = 0,
+        by = 0,
+        bz = 0,
         triIdx = 0;
 
-    for (x = 0; x < chunkSize; x++) {
-        for (y = 0; y < chunkSize; y++) {
-            for (z = 0; z < chunkSize; z++) {
-                //get individual cube and create polys
-                var cube = cubes[x][y][z];
-                var triangles = cubeprocessor.processCube(cube);
-                for (var t = 0; t < triangles.length; t++) {
-                    for (var tv = 0; tv < 3; tv++) {
-                        verts.push(triangles[t].points[tv].clone());
+    for (bx = 0; bx < batchSizeX; bx++) {
+        verts[bx] = [];
+        faces[bx] = [];
+        for (by = 0; by < batchSizeY; by++) {
+            verts[bx][by] = [];
+            faces[bx][by] = [];
+            for (bz = 0; bz < batchSizeZ; bz++) {
+                verts[bx][by][bz] = [];
+                faces[bx][by][bz] = [];
+                triIdx = 0;
+                for (x = 0; x < chunkSize; x++) {
+                    for (y = 0; y < chunkSize; y++) {
+                        for (z = 0; z < chunkSize; z++) {
+                            //get individual cube and create polys
+                            var cube = cubes[x + (bx * chunkSize)][y + (by * chunkSize)][z + (bz * chunkSize)];
+                            var triangles = cubeprocessor.processCube(cube);
+                            for (var t = 0; t < triangles.length; t++) {
+                                for (var tv = 0; tv < 3; tv++) {
+                                    verts[bx][by][bz].push(triangles[t].points[tv].clone());
+                                }
+                                faces[bx][by][bz].push(new THREE.Face3(triIdx, triIdx + 1, triIdx + 2));
+                                triIdx += 3;
+                            }
+                        }
                     }
-                    faces.push(new THREE.Face3(triIdx, triIdx + 1, triIdx + 2));
-                    //geometry.faceVertexUVs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(1, 1)]);
-                    triIdx += 3;
                 }
             }
         }
     }
-    
     //return all to caller
     returnData.verts = verts;
     returnData.faces = faces;
@@ -96,9 +111,9 @@ function getCubes(size, stepSize, minX, maxX, minY, maxY, minZ, maxZ, voxelData)
 }
 
 onmessage = function (oEvent) {
-
+    console.log("worker started");
     //load worker dependencies
     importScripts("/lib/threejs/three.js", "/js/marchingcubes.js", "/js/marchingalg.js");
     //pass our chunk data
-    createChunk(oEvent.data.size, oEvent.data.stepSize, oEvent.data.chunkSize, oEvent.data.chunkX, oEvent.data.chunkY, oEvent.data.chunkZ, oEvent.data.voxelData);
+    createChunk(oEvent.data.size, oEvent.data.stepSize, oEvent.data.chunkSize, oEvent.data.chunkX, oEvent.data.chunkY, oEvent.data.chunkZ, oEvent.data.voxelData, oEvent.data.batchSizeX, oEvent.data.batchSizeY, oEvent.data.batchSizeZ);
 }
