@@ -5,7 +5,7 @@ var mesh,
     renderer, 
     camera, 
     cubemesh, 
-    light,
+    directionalLight,
     scene, 
     controls, 
     chunks, 
@@ -17,7 +17,11 @@ var mesh,
     stepSize = 1, 
     chunkSize = 8, 
     batchSize = 4, //size of chunk batches for initial load
-    digStrength = 1;
+    digStrength = 1,
+    shadowShader,
+    mainShader,
+    renderTarget,
+    renderQuad;
 
 
 
@@ -71,15 +75,13 @@ $(document).ready(function () {
     plane.receiveShadow = true;
     scene.add(plane);
     //add lights
-    var spotLight;
-    spotLight = new THREE.SpotLight(0xeeeeee);
-    spotLight.castShadow = true;
-    spotLight.shadowDarkness = 0.5;
-    spotLight.position = new THREE.Vector3(0, 100, 24);
-    spotLight.intensity = 2;
-    //spotLight.shadowCameraVisible = true;
-    light = spotLight;
-    scene.add(light);
+    directionalLight = new THREE.DirectionalLight(0xeeeeee);
+    directionalLight.castShadow = true;
+    directionalLight.shadowDarkness = 0.5;
+    directionalLight.position = new THREE.Vector3(0, 100, 24);
+    directionalLight.intensity = 2;
+    //directionalLight.shadowCameraVisible = true;
+    scene.add(directionalLight);
     //create the renderer / camera
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
     //camera.add(light);
@@ -103,6 +105,8 @@ $(document).ready(function () {
     //bind inputs
     document.addEventListener('mousemove', onMouseMove, false);
     document.addEventListener('keydown', interact, false);
+    //load shaders
+    
     //begin render cycle
     render();
 });
@@ -217,6 +221,7 @@ function render() {
     renderer.render(scene, camera);
     controls.update(33);
     light.position.applyAxisAngle(right, 0.0002);
+    light.lookAt(new THREE.Vector3(0, 0, 0));
 }
 
 function interact(event) {
