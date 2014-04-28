@@ -121,7 +121,7 @@ $(document).ready(function () {
     //create shadow material
     shadowMaterial = new THREE.ShaderMaterial( { 
         vertexShader: document.getElementById('mainVertexShader').textContent, 
-        fragmentShader: document.getElementById('mainFragmentShader').textContent, 
+        fragmentShader: document.getElementById('mainFragmentShaderPCF').textContent, 
         uniforms: mainUniforms, 
         vertexColors: true, 
         color: 0xcc7766 
@@ -143,7 +143,7 @@ $(document).ready(function () {
     //create shadow material
     waterMaterial = new THREE.ShaderMaterial( { 
         vertexShader: document.getElementById('mainVertexShader').textContent, 
-        fragmentShader: document.getElementById('mainFragmentShader').textContent, 
+        fragmentShader: document.getElementById('mainFragmentShaderPCF').textContent, 
         uniforms: waterUniforms, 
         vertexColors: true, 
         color: 0x6677cc 
@@ -280,7 +280,7 @@ function buildChunk(chunkX, chunkY, chunkZ, batchSize, batchSizeY, batchSizeZ) {
 var right = new THREE.Vector3(1, 0, 0);
 function render() {
     requestAnimationFrame(render);
-    //mainUniforms.shadowMap.value = light.shadowMap;
+    mainUniforms.shadowMap.value = light.shadowMap;
     mainUniforms.directionalLightDirection.value = [
         light.position.x, 
         light.position.y, 

@@ -9,7 +9,8 @@ MARCH.Shadows = function() {
         min = new THREE.Vector3(),
         max = new THREE.Vector3(),
         matrixWorld = new THREE.Vector3(),
-        shadowRatio = 0.8;
+        shadowRatio = 0.8,
+        shadowMapSize = 1024;
     
     this.drawMapOnScreen = false;
     
@@ -69,8 +70,8 @@ MARCH.Shadows = function() {
         for (i = 0; i < lights.length; i++) {
             light = lights[i];
             if (!light.shadowMap) {
-                light.shadowMap = this.createShadowBuffer(512, 512);
-                light.shadowMapSize = new THREE.Vector2(512, 512);
+                light.shadowMap = this.createShadowBuffer(shadowMapSize, shadowMapSize);
+                light.shadowMapSize = new THREE.Vector2(shadowMapSize, shadowMapSize);
                 light.shadowMatrix = new THREE.Matrix4();
             }
             if (!light.shadowCamera) {
