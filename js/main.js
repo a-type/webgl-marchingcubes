@@ -18,10 +18,10 @@ var mesh,
     chunkSize = 8, 
     batchSize = 4, //size of chunk batches for initial load
     digStrength = 1,
-    shadowShader,
-    mainShader,
-    renderTarget,
-    renderQuad;
+    mainUniforms,
+    waterUniforms,
+    shadowProcessor,
+    shadowMaterial;
 
 
 
@@ -62,24 +62,28 @@ $(document).ready(function () {
 
     //create reference cube
     var cubegeometry = new THREE.CubeGeometry( 0.1, 0.1, 0.1 );
-    var cubematerial = new THREE.MeshLambertMaterial( {color: 0x00ff00} );
+    var cubematerial = new THREE.MeshLambertMaterial( {color: 0x448844} );
     cubemesh = new THREE.Mesh(cubegeometry, cubematerial);
     cubemesh.position.set(-1000, -1000, -1000);
     scene.add(cubemesh);
-    //create 'water'
-    var planegeometry = new THREE.PlaneGeometry(size, size);
-    var planematerial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-    var plane = new THREE.Mesh(planegeometry, planematerial);
-    plane.lookAt(new THREE.Vector3(0, 1, 0));
-    plane.position.set(0, -1.5, 0);
-    plane.receiveShadow = true;
-    scene.add(plane);
+    
     //add lights
-    directionalLight = new THREE.DirectionalLight(0xeeeeee);
-    directionalLight.castShadow = true;
+    directionalLight = new THREE.DirectionalLight(0xffffcc);
+    //directionalLight.castShadow = true;
     directionalLight.shadowDarkness = 0.5;
-    directionalLight.position = new THREE.Vector3(0, 100, 24);
+    directionalLight.position = new THREE.Vector3(0, 100, 0);
     directionalLight.intensity = 2;
+    //directionalLight.target = new THREE.Object3D();
+    //directionalLight.target.position = new THREE.Vector3(0, 0, 0);
+    //scene.add(directionalLight.target);
+    light = directionalLight;
+    
+    //add a visible indicator for light
+    var spheregeometry = new THREE.SphereGeometry(1, 1, 1);
+    var spherematerial = new THREE.MeshBasicMaterial( {color: 0xffff88} );
+    var spheremesh = new THREE.Mesh(spheregeometry, spherematerial);
+    light.add(spheremesh);
+    
     //directionalLight.shadowCameraVisible = true;
     scene.add(directionalLight);
     //create the renderer / camera
@@ -93,8 +97,67 @@ $(document).ready(function () {
     width = $("#container").width();
     height = $("#container").height();
     
-    renderer.clearColor = new THREE.Color(0xFFFFFF);
-    renderer.shadowMapEnabled = true;
+    renderer.setClearColor(new THREE.Color(0x444444));
+    //renderer.shadowMapEnabled = true; //THREEjs default shadow mapping
+    shadowProcessor = new MARCH.Shadows();    
+    renderer.addPrePlugin(shadowProcessor);
+    var postShadowViewer = new MARCH.Shadows();
+    postShadowViewer.drawMapOnScreen = true;
+    renderer.addPostPlugin(postShadowViewer);
+
+    mainUniforms = {
+        "ambient": { type: "c", value: new THREE.Color( 0x444444 ) },
+        "diffuse": { type: "c", value: new THREE.Color( 0xcc7766 ) },
+        "emissive": { type: "c", value: new THREE.Color( 0x000000 ) },
+        "ambientLightColor": { type: "fv", value: [0.25, 0.25, 0.25] },
+        "shadowMatrix": { type: "m4", value: new THREE.Matrix4() },
+        "shadowMap": { type: "t", value: light.shadowMap },
+        "shadowMapSize": { type: "v2", value: new THREE.Vector2(500, 500) },
+        "shadowDarkness": { type: "f", value: 0.5 },
+        "directionalLightColor": { type: "fv", value: [1.0, 1.0, 0.8] },
+        "directionalLightDirection": { type: "fv", value: [] }
+    };
+    
+    //create shadow material
+    shadowMaterial = new THREE.ShaderMaterial( { 
+        vertexShader: document.getElementById('mainVertexShader').textContent, 
+        fragmentShader: document.getElementById('mainFragmentShader').textContent, 
+        uniforms: mainUniforms, 
+        vertexColors: true, 
+        color: 0xcc7766 
+    });
+    
+    waterUniforms = {
+        "ambient": { type: "c", value: new THREE.Color( 0x444444 ) },
+        "diffuse": { type: "c", value: new THREE.Color( 0x6677cc ) },
+        "emissive": { type: "c", value: new THREE.Color( 0x000000 ) },
+        "ambientLightColor": { type: "fv", value: [0.25, 0.25, 0.25] },
+        "shadowMatrix": { type: "m4", value: new THREE.Matrix4() },
+        "shadowMap": { type: "t", value: light.shadowMap },
+        "shadowMapSize": { type: "v2", value: new THREE.Vector2(500, 500) },
+        "shadowDarkness": { type: "f", value: 0.5 },
+        "directionalLightColor": { type: "fv", value: [1.0, 1.0, 0.8] },
+        "directionalLightDirection": { type: "fv", value: [] }
+    };
+    
+    //create shadow material
+    waterMaterial = new THREE.ShaderMaterial( { 
+        vertexShader: document.getElementById('mainVertexShader').textContent, 
+        fragmentShader: document.getElementById('mainFragmentShader').textContent, 
+        uniforms: waterUniforms, 
+        vertexColors: true, 
+        color: 0x6677cc 
+    });
+    //shadowMaterial = new THREE.MeshLambertMaterial({color: 0xee9988});
+    
+    //create 'water'
+    var planegeometry = new THREE.PlaneGeometry(size, size);
+    var planematerial = shadowMaterial;
+    var plane = new THREE.Mesh(planegeometry, waterMaterial);
+    plane.lookAt(new THREE.Vector3(0, 1, 0));
+    plane.position.set(0, -1.5, 0);
+    scene.add(plane);
+    
     controls = new THREE.DragControls(camera, renderer.domElement);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     camera.position.set(0, 0, 2);
@@ -105,7 +168,6 @@ $(document).ready(function () {
     //bind inputs
     document.addEventListener('mousemove', onMouseMove, false);
     document.addEventListener('keydown', interact, false);
-    //load shaders
     
     //begin render cycle
     render();
@@ -194,7 +256,7 @@ function buildChunk(chunkX, chunkY, chunkZ, batchSize, batchSizeY, batchSizeZ) {
                     geometry.computeCentroids();
                     geometry.computeFaceNormals();
                     geometry.computeVertexNormals();
-                    var mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0xdd9999 }));
+                    var mesh = new THREE.Mesh(geometry, shadowMaterial);
 
                     //remove old
                     if (chunks[chunkX] && chunks[chunkX][chunkY] && chunks[chunkX][chunkY][chunkZ]) {
@@ -218,10 +280,25 @@ function buildChunk(chunkX, chunkY, chunkZ, batchSize, batchSizeY, batchSizeZ) {
 var right = new THREE.Vector3(1, 0, 0);
 function render() {
     requestAnimationFrame(render);
+    //mainUniforms.shadowMap.value = light.shadowMap;
+    mainUniforms.directionalLightDirection.value = [
+        light.position.x, 
+        light.position.y, 
+        light.position.z
+    ];
+    waterUniforms.directionalLightDirection.value =
+        mainUniforms.directionalLightDirection.value;
+    if (light.shadowMatrix !== null) {
+        mainUniforms.shadowMatrix.value = light.shadowMatrix;
+        waterUniforms.shadowMatrix.value = light.shadowMatrix;
+    }
     renderer.render(scene, camera);
     controls.update(33);
-    light.position.applyAxisAngle(right, 0.0002);
-    light.lookAt(new THREE.Vector3(0, 0, 0));
+    light.position.applyAxisAngle(right, 0.00005);
+    if (Math.abs(light.position.z - 100) < 0.1) {
+        light.position.z = -100;   
+    }
+    //light.lookAt(new THREE.Vector3(0, 0, 0));
 }
 
 function interact(event) {

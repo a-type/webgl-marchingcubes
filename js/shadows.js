@@ -4,41 +4,44 @@ MARCH.Shadows = function() {
     var GL,
         renderer,
         depthMat,
-        /*depthMatMorph,
-        depthMatSkin,
-        depthMatMorphSkin,*/
         frustum = new THREE.Frustum(),
         projMatrix = new THREE.Matrix4(),
         min = new THREE.Vector3(),
         max = new THREE.Vector3(),
         matrixWorld = new THREE.Vector3(),
-        shadowRatio = 0.5;
+        shadowRatio = 0.8;
     
+    this.drawMapOnScreen = false;
     
-    this.initialize = function(rend) {
+    this.init = function(rend) {
         GL = rend.context;
         renderer = rend;
-        var depthShader = THREE.ShadowMapShader;
+        //var depthShader = THREE.ShadowMapShader;
+        var depthShader = THREE.ShaderLib[ "depthRGBA" ];
         var depthUniforms = THREE.UniformsUtils.clone(depthShader.uniforms);
         
         depthMat = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms });
-        /*depthMatMorph = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms, morphTargets: true });
-        depthMatSkin = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms, skinning: true });
-        depthMatMorphSkin = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms, morphTargets: true, skinning: true });*/
+        
+        //custom:
+        /*var uniforms = {
+            "vShadowCoord" : { type: "fv", value: [] },
+            "shadowMatrix" : { type: "m4", value: new THREE.Matrix4() }
+        };
+        
+        depthMat = new THREE.ShaderMaterial( {
+            uniforms: uniforms,
+            vertexShader: document.getElementById("shadowVertexShader").textContent,
+            fragmentShader: document.getElementById("shadowFragmentShader").textContent
+        });*/
         
         depthMat._shadowPass = true;
-        depthMatMorph._shadowPass = true;
-        depthMatSkin._shadowPass = true;
-        depthMatMorphSkin._shadowPass = true;
     };
     
-    this.createShadowBuffer = function(viewWidth, viewHeight, shadowRatio) {
-        var shadowWidth = viewWidth * shadowRatio,
-            shadowHeight = viewHeight * shadowRatio,
-            rt = new THREE.WebGLRenderTarget(shadowWidth, shadowHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat });
+    this.createShadowBuffer = function(viewWidth, viewHeight) {
+        return new THREE.WebGLRenderTarget(viewWidth, viewHeight, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat });
     };
     
-    this.render = function(viewWidth, viewHeight) {
+    this.render = function(scene, camera, viewWidth, viewHeight) {
         var i, j, jl, n,
             shadowMap, shadowMatrix, shadowCamera,
             prog, buff, mat,
@@ -51,14 +54,23 @@ MARCH.Shadows = function() {
         GL.disable(GL.BLEND);
         GL.enable(GL.CULL_FACE);
         GL.frontFace(GL.CCW);
-        GL.cullFace(GL.BACK);
+        GL.cullFace(GL.FRONT);
         renderer.setDepthTest(true);
+        
+        for ( i = 0, il = scene.__lights.length; i < il; i ++ ) {
+
+			light = scene.__lights[ i ];
+            if (light instanceof THREE.DirectionalLight) {
+                lights[k] = light;
+                k++;
+            }
+        }
         
         for (i = 0; i < lights.length; i++) {
             light = lights[i];
             if (!light.shadowMap) {
-                light.shadowMap = createShadowBuffer(viewWidth, viewHeight, shadowRatio);
-                light.shadowMapSize = new THREE.Vector2(viewWidth * shadowRatio, viewHeight * shadowRatio);
+                light.shadowMap = this.createShadowBuffer(512, 512);
+                light.shadowMapSize = new THREE.Vector2(512, 512);
                 light.shadowMatrix = new THREE.Matrix4();
             }
             if (!light.shadowCamera) {
@@ -77,26 +89,30 @@ MARCH.Shadows = function() {
             shadowMatrix = light.shadowMatrix;
             shadowCamera = light.shadowCamera;
             
-            shadowCamera.position.setFromMatrixPosition(light.matrixWorld);
-            matrixWorld.setFromMatrixPosition(light.target.matrixWorld);
-            shadowCamera.lookAt(matrixWorld);
-            shadowCamera.updateMatrixWorld();
+            shadowCamera.position.setFromMatrixPosition(light.matrixWorld);//
+            matrixWorld.setFromMatrixPosition(light.target.matrixWorld);//
+            shadowCamera.lookAt(matrixWorld);//
+            shadowCamera.updateMatrixWorld();//
             
-            shadowCamera.matrixWorldInverse.getInverse(shadowCamera.matrixWorld);
+            shadowCamera.matrixWorldInverse.getInverse(shadowCamera.matrixWorld);//
             
-            shadowMatrix.set( 0.5, 0.0, 0.0, 0.5,
+            shadowMatrix.set( 0.5, 0.0, 0.0, 0.5,//
                              0.0, 0.5, 0.0, 0.5,
                              0.0, 0.0, 0.5, 0.5,
                              0.0, 0.0, 0.0, 1.0);
-            shadowMatrix.multiply(shadowCamera.projectionMatrix);
-            shadowMatrix.multiply(shadowCamera.matrixWorldInverse);
+            shadowMatrix.multiply(shadowCamera.projectionMatrix);//
+            shadowMatrix.multiply(shadowCamera.matrixWorldInverse);//
             
-            projMatrix.multiplyMatrices(shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse);
-            frustum.setFromMatrix(projMatrix);
+            projMatrix.multiplyMatrices(shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse);//
+            frustum.setFromMatrix(projMatrix);//
             
             //render
-            renderer.setRenderTarget(shadowMap);
-            renderer.clear();
+            if (!this.drawMapOnScreen) {
+                renderer.setRenderTarget(shadowMap);
+                renderer.clear();
+            } else {
+                renderer.setViewport(viewWidth / 2, viewHeight / 2, light.shadowMapSize.x, light.shadowMapSize.y);
+            }
             
             renderList = scene.__webglObjects;
             
@@ -106,7 +122,8 @@ MARCH.Shadows = function() {
                 webGLObject.render = false;
                 if (object.visible && object.castShadow) {
                     if (! ( object instanceof THREE.Mesh) || (object.frustumCulled) || frustum.intersectsObject(object)) {
-                        object._modelViewMatrix.multiplyMatrices(shadowCamera.matrixWorldInverse, object.matrixWorld);
+                       //apply inverse light camera matrix to all objects 
+                object._modelViewMatrix.multiplyMatrices(shadowCamera.matrixWorldInverse, object.matrixWorld);//
                         webGLObject.render = true;
                     }
                 }
@@ -129,14 +146,38 @@ MARCH.Shadows = function() {
                     }
                 }
             } 
+            
+            // set matrices and render immediate objects
+
+			renderList = scene.__webglObjectsImmediate;
+
+			for ( j = 0, jl = renderList.length; j < jl; j ++ ) {
+
+				webglObject = renderList[ j ];
+				object = webglObject.object;
+
+				if ( object.visible && object.castShadow ) {
+
+					object._modelViewMatrix.multiplyMatrices( shadowCamera.matrixWorldInverse, object.matrixWorld );
+
+					_renderer.renderImmediateObject( shadowCamera, scene.__lights, fog, depthMat, object );
+
+				}
+
+			}
         }
         
         //restore GL state
+        if (this.drawMapOnScreen) {
+            renderer.setViewport(0, 0, viewWidth, viewHeight);
+        }
+        
         var clearColor = renderer.getClearColor(),
             clearAlpha = renderer.getClearAlpha();
         
         GL.clearColor(clearColor.r, clearColor.g, clearColor.b, clearAlpha);
         GL.enable(GL.BLEND);
+        GL.cullFace(GL.BACK);
         
     };
 

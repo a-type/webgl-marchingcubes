@@ -1,18 +1,19 @@
 THREE.ShadowMapShader = {
 
     uniforms: {
-        "shadowMatrix" : { type: "m4", value: null }
+        "shadowCoord" : { type: "fv", value: [] },
+        "shadowMatrix" : { type: "m4", value: new THREE.Matrix4() }
     },
     
     vertexShader: [
         //parameters
-        "varying vec4 vShadowCoord;", //final transformed coordinate
+        "varying vec4 shadowCoord;", //final transformed coordinate
         "uniform mat4 shadowMatrix;", //transform matrix for the light camera
 
         //main
         "void main()",
         "{",
-            "gl_Position = shadowMatrix * vShadowCoord;",
+            "gl_Position = shadowMatrix * shadowCoord;",
         "}"
     ].join("\n"),
     
