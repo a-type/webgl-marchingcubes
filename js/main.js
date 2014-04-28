@@ -101,9 +101,9 @@ $(document).ready(function () {
     //renderer.shadowMapEnabled = true; //THREEjs default shadow mapping
     shadowProcessor = new MARCH.Shadows();    
     renderer.addPrePlugin(shadowProcessor);
-    var postShadowViewer = new MARCH.Shadows();
-    postShadowViewer.drawMapOnScreen = true;
-    renderer.addPostPlugin(postShadowViewer);
+    //var postShadowViewer = new MARCH.Shadows();
+    //postShadowViewer.drawMapOnScreen = true;
+    //renderer.addPostPlugin(postShadowViewer);
 
     mainUniforms = {
         "ambient": { type: "c", value: new THREE.Color( 0x444444 ) },
