@@ -39,7 +39,9 @@ $(document).ready(function () {
         var hash = window.location.hash.substring(1);
         if (hash == "flat") {
             VOXEL.generateFlat(size + 1, stepSize);
-        } else {
+        } else if (hash == "smooth") {
+            VOXEL.generate(size + 1, stepSize);
+        }else {
             VOXEL.generateCubic(size + 1, stepSize);   
         }
     } else {
