@@ -21,7 +21,8 @@ var mesh,
     mainUniforms,
     waterUniforms,
     shadowProcessor,
-    shadowMaterial;
+    shadowMaterial,
+    stillLight = false;
 
 
 
@@ -304,9 +305,11 @@ function render() {
     }
     renderer.render(scene, camera);
     controls.update(33);
-    light.position.applyAxisAngle(right, 0.00005);
-    if (Math.abs(light.position.z - 100) < 0.1) {
-        light.position.z = -100;   
+    if (!stillLight) {
+        light.position.applyAxisAngle(right, 0.00005);
+        if (Math.abs(light.position.z - 100) < 0.1) {
+            light.position.z = -100;   
+        }
     }
     //light.lookAt(new THREE.Vector3(0, 0, 0));
 }
@@ -318,6 +321,9 @@ function interact(event) {
             break;
         case 81:
             build();
+            break;
+        case 76:
+            stillLight = !stillLight;
             break;
     }
 }
