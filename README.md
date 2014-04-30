@@ -16,3 +16,8 @@ First, host the files. You can do this using Node.js and `fileserver.js`, locate
     > node fileserver.js
     
 This will host the directory on `http://localhost:8888`. Navigate there to view the scene.
+
+Screenshot
+==========
+
+![img](screen.png)

@@ -93,28 +93,23 @@
     
     </script>
     <script type="x-shader/x-vertex" id="shadowVertexShader">
-        varying vec4 vShadowCoord;
-        uniform mat4 shadowMatrix;
-
-        void main()
-        {
-            gl_Position = shadowMatrix * vShadowCoord;
+        
+        void main() {
+            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+            gl_Position = projectionMatrix * mvPosition;
         }
     
     </script>
     <script type="x-shader/x-fragment" id="shadowFragmentShader">
-        vec4 pack_depth(const in float depth)
-        {
-            const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
-            const vec4 bit_mask = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);
-            vec4 res = fract(depth * bit_shift);
+        vec4 pack_depth( const in float depth ) {
+            const vec4 bit_shift = vec4( 256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0 );
+            const vec4 bit_mask  = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );
+            vec4 res = fract( depth * bit_shift );
             res -= res.xxyz * bit_mask;
             return res;
         }
-
-        void main(void)
-        {
-            gl_FragData[0] = pack_depth(gl_FragCoord.z);
+        void main() {
+            gl_FragData[ 0 ] = pack_depth( gl_FragCoord.z );
         }
     </script>
     <script type="x-shader/x-fragment" id="mainFragmentShaderPCF">
@@ -150,8 +145,8 @@
 
                 float shadow = 0.0;
                 const float shadowDelta = 1.0 / 9.0;
-                float xPixelOffset = 0.5 / shadowMapSize.x;
-                float yPixelOffset = 0.5 / shadowMapSize.y;
+                float xPixelOffset = 0.125 / shadowMapSize.x;
+                float yPixelOffset = 0.125 / shadowMapSize.y;
                 float dx0 = -1.25 * xPixelOffset;
                 float dy0 = -1.25 * yPixelOffset;
                 float dx1 = 1.25 * xPixelOffset;
@@ -193,8 +188,6 @@
 <script src="js/marchingalg.js"></script>
 <script src="lib/noise/noise.js"></script>
 <script src="lib/threejs/three.js"></script>
-<script src="shaders-js/mainshader.js"></script>
-<script src="shaders-js/shadowshader.js"></script>
 <script src="lib/threejs/UnpackDepthRGBAShader.js"></script>
 <script src="js/shadows.js"></script>
 <script src="js/DragControls.js"></script>

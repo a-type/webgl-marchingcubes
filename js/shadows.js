@@ -17,23 +17,12 @@ MARCH.Shadows = function() {
     this.init = function(rend) {
         GL = rend.context;
         renderer = rend;
-        //var depthShader = THREE.ShadowMapShader;
-        var depthShader = THREE.ShaderLib[ "depthRGBA" ];
-        var depthUniforms = THREE.UniformsUtils.clone(depthShader.uniforms);
-        
-        depthMat = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms });
-        
-        //custom:
-        /*var uniforms = {
-            "vShadowCoord" : { type: "fv", value: [] },
-            "shadowMatrix" : { type: "m4", value: new THREE.Matrix4() }
-        };
         
         depthMat = new THREE.ShaderMaterial( {
-            uniforms: uniforms,
+            uniforms: {},
             vertexShader: document.getElementById("shadowVertexShader").textContent,
             fragmentShader: document.getElementById("shadowFragmentShader").textContent
-        });*/
+        });
         
         depthMat._shadowPass = true;
     };
