@@ -10,7 +10,7 @@ MARCH.Shadows = function() {
         max = new THREE.Vector3(),
         matrixWorld = new THREE.Vector3(),
         shadowRatio = 0.8,
-        shadowMapSize = 1024;
+        shadowMapSize = 2048;
     
     this.drawMapOnScreen = false;
     
