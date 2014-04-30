@@ -27,6 +27,8 @@ Use WASD to move the camera. Use the left mouse button and mouse pan to change t
 
 To generate the scene with flat terrain instead of Perlin noise, add a hash to the URL: `http://localhost:8888/index.html#flat`.
 
+To generate smoothed terrain, try `#smooth` instead. Personally, I prefer the blocky style, but it's still pretty cool!
+
 ##Screenshots
 
 ![img](screen.png)
