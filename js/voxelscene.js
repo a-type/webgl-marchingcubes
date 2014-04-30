@@ -57,7 +57,7 @@ VOXEL.generateFlat = function(size, stepSize) {
         for (py = 0; py < size; py++) {
             VOXEL.voxels[px][py] = [];
             for (pz = 0; pz < size; pz++) {
-                if (py > size / 2)
+                if (py < size / 2)
                     VOXEL.voxels[px][py][pz] = 0;
                 else
                     VOXEL.voxels[px][py][pz] = 1;

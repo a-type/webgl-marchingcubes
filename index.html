@@ -79,7 +79,7 @@
             bvec2 frustumTestVec = bvec2(inFrustum, shadowCoord.z <= 1.0);
             bool frustumTest = all(frustumTestVec);
             if (frustumTest) {            
-                shadowCoord.z += 0.0005;
+                shadowCoord.z += 0.000005;
 
                 vec4 rgbaDepth = texture2D(shadowMap, shadowCoord.xy);
                 float distanceFromLight = unpackDepth(rgbaDepth);
@@ -141,7 +141,7 @@
             bvec2 frustumTestVec = bvec2(inFrustum, shadowCoord.z <= 1.0);
             bool frustumTest = all(frustumTestVec);
             if (frustumTest) {            
-                shadowCoord.z += 0.0005;
+                shadowCoord.z += 0.000005;
 
                 float shadow = 0.0;
                 const float shadowDelta = 1.0 / 9.0;

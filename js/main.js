@@ -35,9 +35,17 @@ $(document).ready(function () {
     // http://stackoverflow.com/questions/11476765/using-noise-to-generate-marching-cube-terrain
     
     //gen terrain
-    VOXEL.generateCubic(size + 1, stepSize);
-    //VOXEL.generate(size + 1, stepSize);
-
+    if (window.location.hash) {
+        var hash = window.location.hash.substring(1);
+        if (hash == "flat") {
+            VOXEL.generateFlat(size + 1, stepSize);
+        } else {
+            VOXEL.generateCubic(size + 1, stepSize);   
+        }
+    } else {
+        VOXEL.generateCubic(size + 1, stepSize);
+    }
+    
     //create the scene
     scene = new THREE.Scene();
 
@@ -306,6 +314,9 @@ function interact(event) {
         case 69:
             dig();
             break;
+        case 81:
+            build();
+            break;
     }
 }
 
@@ -335,6 +346,58 @@ function dig() {
         VOXEL.influenceFromPhysicalPosition(parseInt(x + 0.5), parseInt(y - 0.5), parseInt(z + 0.5), size, stepSize, digStrength);
         VOXEL.influenceFromPhysicalPosition(parseInt(x + 0.5), parseInt(y + 0.5), parseInt(z - 0.5), size, stepSize, digStrength);
         VOXEL.influenceFromPhysicalPosition(parseInt(x + 0.5), parseInt(y + 0.5), parseInt(z + 0.5), size, stepSize, digStrength);
+        
+        var ix = parseInt(x),
+            iy = parseInt(y),
+            iz = parseInt(z);
+                
+        //detect if we are on a chunk edge, if so build adjacent(s)
+        //flags:
+        var rebuildLeft = false,
+            rebuildRight = false,
+            rebuildTop = false,
+            rebuildBottom = false,
+            rebuildFront = false,
+            rebuildBack = false;
+        rebuildLeft = ((ix) % chunkSize === 0);
+        rebuildRight = ((ix + 1) % chunkSize === 0);
+        rebuildBottom = ((iy) % chunkSize === 0);
+        rebuildTop = ((iy + 1) % chunkSize == 0);
+        rebuildBack = ((iz) % chunkSize === 0);
+        rebuildFront = ((iz + 1) % chunkSize == 0);
+        //to avoid a ton of conditional checking which I really don't want to write right now...  just rebuild entire batch
+        if (rebuildLeft || rebuildRight || rebuildBottom || rebuildTop || rebuildBack || rebuildFront) {
+            buildChunk((parseInt((ix + (size / 2)) / chunkSize) - 1) * chunkSize, (parseInt((iy + (size / 2)) / chunkSize) - 1) * chunkSize, (parseInt((iz + (size / 2)) / chunkSize) - 1) * chunkSize, 3);
+        } else {
+            buildChunk(parseInt((ix + (size / 2)) / chunkSize) * chunkSize, parseInt((iy + (size / 2)) / chunkSize) * chunkSize, parseInt((iz + (size / 2)) / chunkSize) * chunkSize);
+        }
+    }
+}
+
+function build() {
+    //cast ray from mouse to terrain
+    var mousePos = lastMousePos.clone();
+    mousePos.x = (mousePos.x - (width / 2)) / (width / 2);
+    mousePos.y = ((height / 2) - mousePos.y) / (height / 2);
+    var ray = projector.pickingRay(mousePos, camera);
+    var allIntersects = ray.intersectObjects(scene.children);
+    if (allIntersects.length > 0) {
+        console.log("hit");
+        //subtract 1 from intersection point along ray
+        allIntersects[0].point.sub(ray.ray.direction);
+        var x = allIntersects[0].point.x,
+            y = allIntersects[0].point.y,
+            z = allIntersects[0].point.z;
+        cubemesh.position.set(x, y, z);
+        //for all surrounding voxels, add strength
+        VOXEL.influenceFromPhysicalPosition(parseInt(x - 0.5), parseInt(y - 0.5), parseInt(z - 0.5), size, stepSize, -digStrength);
+        VOXEL.influenceFromPhysicalPosition(parseInt(x - 0.5), parseInt(y - 0.5), parseInt(z + 0.5), size, stepSize, -digStrength);
+        VOXEL.influenceFromPhysicalPosition(parseInt(x - 0.5), parseInt(y + 0.5), parseInt(z - 0.5), size, stepSize, -digStrength);
+        VOXEL.influenceFromPhysicalPosition(parseInt(x - 0.5), parseInt(y + 0.5), parseInt(z + 0.5), size, stepSize, -digStrength);
+        VOXEL.influenceFromPhysicalPosition(parseInt(x + 0.5), parseInt(y - 0.5), parseInt(z - 0.5), size, stepSize, -digStrength);
+        VOXEL.influenceFromPhysicalPosition(parseInt(x + 0.5), parseInt(y - 0.5), parseInt(z + 0.5), size, stepSize, -digStrength);
+        VOXEL.influenceFromPhysicalPosition(parseInt(x + 0.5), parseInt(y + 0.5), parseInt(z - 0.5), size, stepSize, -digStrength);
+        VOXEL.influenceFromPhysicalPosition(parseInt(x + 0.5), parseInt(y + 0.5), parseInt(z + 0.5), size, stepSize, -digStrength);
         
         var ix = parseInt(x),
             iy = parseInt(y),
