@@ -5,7 +5,7 @@ A WebGL implementation of the marching cubes algorithm for deformable terrain
 
 ##Running the App Right Now
 
-If you just want to take a look, you can do that here: http://www.grantforrest.net/webgl-marchingcubes/index.html
+If you just want to take a look, you can do that here: http://gforrest-static.s3-website-us-east-1.amazonaws.com/marchingcubes/index.html
 
 ##Running the App Locally
 
